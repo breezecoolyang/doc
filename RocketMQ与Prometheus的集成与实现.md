@@ -37,8 +37,8 @@ RocketMQ-Exporter主要是配合Prometheus来做监控，下面来看看当前�
 
 - 监控指标
 
-监控指标 | 含义 | 
----|---|---
+监控指标 | 含义
+---|---
 rocketmq_broker_tps          | broker每秒生产消息数量 
 rocketmq_broker_qps          | broker每秒消费消息数量 
 rocketmq_producer_tps        | 某个topic每秒生产的消息数量
@@ -52,8 +52,8 @@ rocketmq_group_get_latency_by_storetime | 某个消费组的消费延时时间
 
 - 告警指标
 
-告警指标 | 含义 | 
----|---|---
+告警指标 | 含义 
+---|---
 sum(rocketmq_producer_tps) by (cluster) >= 10          | 集群发送tps太高
 sum(rocketmq_producer_tps) by (cluster) < 1            | 集群发送tps太低 
 sum(rocketmq_consumer_tps) by (cluster) >= 10          | 集群消费tps太高
@@ -99,7 +99,7 @@ java -jar rocketmq-exporter-0.0.1-SNAPSHOT.jar [--rocketmq.config.namesrvAddr="1
 ```
 
 4 安装Prometheus
-首先到Prometheus官方下载地址:[https://prometheus.io/download/](https://prometheus.io/download/)去下载Prometheus安装包，当前以linux的安装为例，选择的安装包为
+首先到Prometheus官方下载地址[https://prometheus.io/download/](https://prometheus.io/download/)去下载Prometheus安装包，当前以linux的安装为例，选择的安装包为
 prometheus-2.7.0-rc.1.linux-amd64.tar.gz，经过如下的操作步骤就可以启动prometheus进程。
 
 ```
