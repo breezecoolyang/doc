@@ -84,13 +84,16 @@ git clone https://github.com/apache/rocketmq-exporter
 cd rocketmq-exporter
 mvn clean install
 ```
+
 3 配置和运行
 RocketMQ-Exporter 有如下的运行选项
+
 选项 | 默认值 | 含义
 ---|---|---
 rocketmq.config.namesrvAddr | 127.0.0.1:9876 | MQ集群的nameSrv地址
 rocketmq.config.webTelemetryPath | /metrics | 指标搜集路径
 server.port | 5557 | HTTP服务暴露端口
+
 以上的运行选项既可以在下载代码后在配置文件中更改，也可以通过命令行来设置。
 编译出来的jar包就叫rocketmq-exporter-0.0.1-SNAPSHOT.jar，可以通过如下的方式来运行。
 
