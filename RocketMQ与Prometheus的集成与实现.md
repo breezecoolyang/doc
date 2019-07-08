@@ -61,9 +61,9 @@ sum(rocketmq_producer_tps) by (cluster) < 1            | 集群发送tps太低
 sum(rocketmq_consumer_tps) by (cluster) >= 10          | 集群消费tps太高
 sum(rocketmq_consumer_tps) by (cluster) < 1            | 集群消费tps太低
 rocketmq_group_get_latency_by_storetime > 1000         | 集群消费延时告警
-消费者堆积告警指标           | 消费堆积
+rocketmq_message_accumulation > value           | 消费堆积告警 
 
-消费者堆积告警指标也是一个聚合指标，它根据消费堆积的聚合指标生成。 告警指标设置的值只是个阈值只是象征性的值，用户可根据在实际使用RocketMQ的情况下自行设定。这里重点介绍一下消费者堆积告警指标，在以往的监控系统中，由于没有像Prometheus那样有强大的PromQL语言，在处理消费者告警问题时势必需要为每个消费者设置告警，那这样就需要RocketMQ系统的维护人员为每个消费者添加，要么在系统后台检测到有新的消费者创建时自动添加。在Prometheus中，这可以通过一条如下的语句来实现：
+消费者堆积告警指标也是一个聚合指标，它根据消费堆积的聚合指标生成，value这个阈值对每个消费者是不固定的，当前是根据过去5分钟生产者生产的消息数量来定，用户也可以根据实际情况自行设定该阈值。 告警指标设置的值只是个阈值只是象征性的值，用户可根据在实际使用RocketMQ的情况下自行设定。这里重点介绍一下消费者堆积告警指标，在以往的监控系统中，由于没有像Prometheus那样有强大的PromQL语言，在处理消费者告警问题时势必需要为每个消费者设置告警，那这样就需要RocketMQ系统的维护人员为每个消费者添加，要么在系统后台检测到有新的消费者创建时自动添加。在Prometheus中，这可以通过一条如下的语句来实现：
 
 ```
 (sum(rocketmq_producer_offset) by (topic) - on(topic)  group_right  sum(rocketmq_consumer_offset) by (group,topic)) 
