@@ -102,7 +102,7 @@ java -jar rocketmq-exporter-0.0.1-SNAPSHOT.jar [--rocketmq.config.namesrvAddr="1
 ```
 
 4 安装Prometheus
-首先到Prometheus官方下载地址[https://prometheus.io/download/](https://prometheus.io/download/)去下载Prometheus安装包，当前以linux的安装为例，选择的安装包为
+首先到Prometheus官方下载地址[https://prometheus.io/download/](https://prometheus.io/download/)去下载Prometheus安装包，当前以linux系统安装为例，选择的安装包为
 prometheus-2.7.0-rc.1.linux-amd64.tar.gz，经过如下的操作步骤就可以启动prometheus进程。
 
 ```
@@ -139,7 +139,7 @@ global:
      - targets: ['localhost:5557']
 ```
 
-更改配置文件后，重启服务即可。重启后就可以在Prometheus界面查询RocketMQ-Exporter上报的指标，例如查询rocketmq_broker_tps指标结果如下
+更改配置文件后，重启服务即可。重启后就可以在Prometheus界面查询RocketMQ-Exporter上报的指标，例如查询rocketmq_broker_tps指标，其结果如下
 
 ![prometheus_query](pictures/prometheus_query.png)
 
@@ -147,7 +147,7 @@ global:
 
 5 告警规则添加
 
-在Prometheus的配置文件中添加告警的配置项，*.rules表示匹配多个后缀为rules的文件
+在Prometheus可以展示RocketMQ-Exporter的指标后，就可以在Prometheus中配置RocketMQ的告警指标了。在Prometheus的配置文件中添加如下的告警配置项，*.rules表示可以匹配多个后缀为rules的文件。
 
 ```
 rule_files:
@@ -156,7 +156,7 @@ rule_files:
   - /home/prometheus/prometheus-2.7.0-rc.1.linux-amd64/rules/*.rules
 ```
 
-告警配置文件具体内容如下
+当前设置的告警配置文件为warn.rules，其文件具体内容如下所示。
 
 ```
 ###
@@ -220,7 +220,7 @@ groups:
       summary: message consumes time lag behind message store time too much 
 ```
 
-最后在Prometheus的告警展示效果如下所示，红色表示当前处于告警状态的项。
+最终，可以在Prometheus的看一下告警展示效果，红色表示当前处于告警状态的项，绿色表示正常状态。
 
 ![alerts](pictures/alerts.png)
 
@@ -268,7 +268,7 @@ cd grafana-5.4.3/
 
 这个时候可以到Grafana官网去下载当前已为RocketMQ创建好的配置文件，地址为[https://grafana.com/dashboards/10477/revisions](https://grafana.com/dashboards/10477/revisions)，如下图所示![grafana](pictures/grafana.png)，点击download就可以下载配置文件，下载配置文件然后，复制配置文件中的内容粘贴到上图的粘贴内容处。
 
-最后按上述的方式就将配置文件导入到Grafana了。
+最后按上述方式就将配置文件导入到Grafana了。
 
 ![import_dash_board](pictures/import_dash_board.png)
 
