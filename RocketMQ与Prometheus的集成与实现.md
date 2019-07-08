@@ -5,13 +5,13 @@
 
 
 文章主要内容包含以下几个方面：
-1. RoceketMQ介绍
+1. RocketMQ介绍
 2. Prometheus简介
 3. RocketMQ-Exporter的具体实现
 4. RocketMQ-Exporter的监控指标和告警指标
 5. RocketMQ-Exporter使用示例
 
-## RoceketMQ介绍
+## RocketMQ介绍
 RocketMQ是一个分布式消息和流数据平台，具有低延迟、高性能、高可靠性、万亿级容量和灵活的可扩展性。简单的来说，它由Broker服务器和客户端两部分组成，其中客户端一个是消息发布者客户端(Producer)，它负责向Broker服务器发送消息；另外一个是消息的消费者客户端(Consumer)，多个消费者可以组成一个消费组，来订阅和拉取消费Broker服务器上存储的消息。正由于它具有高性能、高可靠性和高实时性的特点，与其他协议组件在MQTT等各种消息场景中的结合也越来越多，应用越来越广泛。而对于这样一个强大的消息中间件平台，在实际使用的时候还缺少一个监控管理平台。而当前在开源界，使用最广泛监控解决方案的就是Prometheus。与其它传统监控系统相比较，Prometheus具有易于管理，监控服务的内部运行状态，强大的数据模型，强大的查询语言PromQL，高效的数据处理，可扩展，易于集成，可视化，开放性等优点。并且借助于Prometheus可以很快速的构建出一个能够监控RocketMQ的监控平台。
 
 ## Prometheus简介
@@ -110,8 +110,8 @@ tar -xzf prometheus-2.7.0-rc.1.linux-amd64.tar.gz
 cd prometheus-2.7.0-rc.1.linux-amd64/
 ./prometheus --config.file=prometheus.yml --web.listen-address=:5555
 ```
-prometheus 默认监听端口号为9090，为了不与系统上的其它进程监听端口冲突，我们在启动参数里面重新设置了监听端口号为5555。然后通过浏览器访问http://<服务器IP地址>:5555,就可以验证prometheus是否已成功安装，显示界面如下：
-由于RocketMQ-Exporter进程已启动，这个时候可以通过prometheus来抓取RocketMQ-Exporter的数据，这个时候只需要更改prometheus启动的配置文件即可
+Prometheus 默认监听端口号为9090，为了不与系统上的其它进程监听端口冲突，我们在启动参数里面重新设置了监听端口号为5555。然后通过浏览器访问http://<服务器IP地址>:5555,就可以验证Prometheus是否已成功安装，显示界面如下![prometheus_original](pictures/prometheus_original.png)
+由于RocketMQ-Exporter进程已启动，这个时候可以通过Prometheus来抓取RocketMQ-Exporter的数据，这个时候只需要更改Prometheus启动的配置文件即可
 整体配置文件如下：
 
 ```
@@ -138,9 +138,93 @@ global:
      static_configs:
      - targets: ['localhost:5557']
 ```
-更改配置文件后，重启即可。
 
-5 Grafana dashboard for RocketMQ
+更改配置文件后，重启服务即可。重启后就可以在Prometheus界面查询RocketMQ-Exporter上报的指标，例如查询rocketmq_broker_tps指标结果如下
+
+![prometheus_query](pictures/prometheus_query.png)
+
+
+
+5 告警规则添加
+
+在Prometheus的配置文件中添加告警的配置项，*.rules表示匹配多个后缀为rules的文件
+
+```
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml" 
+  - /home/prometheus/prometheus-2.7.0-rc.1.linux-amd64/rules/*.rules
+```
+
+告警配置文件具体内容如下
+
+```
+###
+# Sample prometheus rules/alerts for rocketmq.
+#
+###
+# Galera Alerts
+
+groups:
+- name: GaleraAlerts
+  rules:
+  - alert: RocketMQClusterProduceHigh
+    expr: sum(rocketmq_producer_tps) by (cluster) >= 10
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      description: '{{$labels.cluster}} Sending tps too high.'
+      summary: cluster send tps too high
+  - alert: RocketMQClusterProduceLow
+    expr: sum(rocketmq_producer_tps) by (cluster) < 1
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      description: '{{$labels.cluster}} Sending tps too low.'
+      summary: cluster send tps too low
+  - alert: RocketMQClusterConsumeHigh
+    expr: sum(rocketmq_consumer_tps) by (cluster) >= 10
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      description: '{{$labels.cluster}} consuming tps too high.'
+      summary: cluster consume tps too high
+  - alert: RocketMQClusterConsumeLow
+    expr: sum(rocketmq_consumer_tps) by (cluster) < 1
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      description: '{{$labels.cluster}} consuming tps too low.'
+      summary: cluster consume tps too low
+  - alert: ConsumerFallingBehind
+    expr: (sum(rocketmq_producer_offset) by (topic) - on(topic)  group_right  sum(rocketmq_consumer_offset) by (group,topic)) - ignoring(group) group_left sum (avg_over_time(rocketmq_producer_tps[5m])) by (topic)*5*60 > 0
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      description: 'consumer {{$labels.group}} on {{$labels.topic}} lag behind
+        and is falling behind (behind value {{$value}}).'
+      summary: consumer lag behind
+  - alert: GroupGetLatencyByStoretime
+    expr: rocketmq_group_get_latency_by_storetime > 1000
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      description: 'consumer {{$labels.group}} on {{$labels.broker}}, {{$labels.topic}} consume time lag behind message store time
+        and (behind value is {{$value}}).'
+      summary: message consumes time lag behind message store time too much 
+```
+
+最后在Prometheus的告警展示效果如下所示，红色表示当前处于告警状态的项。
+
+![alerts](pictures/alerts.png)
+
+6 Grafana dashboard for RocketMQ
 
 Prometheus自身的指标展示平台没有当前流行的展示平台Grafana好， 为了更好的展示RocketMQ的指标，可以使用Grafana来展示Prometheus获取的指标。首先到官网去下载[https://grafana.com/grafana/download](https://grafana.com/grafana/download), 这里仍以二进制文件安装为例进行介绍。
 
@@ -149,7 +233,7 @@ wget https://dl.grafana.com/oss/release/grafana-6.2.5.linux-amd64.tar.gz
 tar -zxvf grafana-6.2.5.linux-amd64.tar.gz
 cd grafana-5.4.3/
 ```
-同样为了不与其它进程的端口冲突，可以修改conf目录下的defaults.ini文件的监听端口，当前将这个grafana的监听端口改为55555，然后使用如下的命令启动即可
+同样为了不与其它进程的使用端口冲突，可以修改conf目录下的defaults.ini文件的监听端口，当前将grafana的监听端口改为55555，然后使用如下的命令启动即可
 
 ```
 ./bin/grafana-server web
@@ -182,15 +266,15 @@ cd grafana-5.4.3/
 
 ![import_config_action](pictures/import_config_action.png)
 
-这个时候可以到Grafana官网去下载配置文件，地址为[https://grafana.com/dashboards/10477/revisions](https://grafana.com/dashboards/10477/revisions)去下载dashboard配置文件，如图所示![grafana](pictures/grafana.png)，点击download就可以下载配置文件，下载配置文件然后，复制配置文件中的内容粘贴到上图的粘贴内容处。
+这个时候可以到Grafana官网去下载当前已为RocketMQ创建好的配置文件，地址为[https://grafana.com/dashboards/10477/revisions](https://grafana.com/dashboards/10477/revisions)，如下图所示![grafana](pictures/grafana.png)，点击download就可以下载配置文件，下载配置文件然后，复制配置文件中的内容粘贴到上图的粘贴内容处。
 
-最后按如下的方式配置就将RocketMQ的 dashboard给导入了。
+最后按上述的方式就将配置文件导入到Grafana了。
 
 ![import_dash_board](pictures/import_dash_board.png)
 
-最终的效果如下所示：
+最终的效果如下所示
 
-![RocketMQ-dashboard](pictures/RocketMQ-dashboard.png)
+![Rocketmq-new-dashboard](pictures/Rocketmq-new-dashboard.png)
 
 
 
