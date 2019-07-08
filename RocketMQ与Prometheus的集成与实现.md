@@ -179,7 +179,7 @@ cd grafana-5.4.3/
 
 ![import_config_action](pictures/import_config_action.png)
 
-这个时候可以到Grafana官网去下载配置文件，地址为[https://grafana.com/dashboards/10477/revisions](https://grafana.com/dashboards/10477/revisions)去下载dashboard配置文件，如图所示![image](https://note.youdao.com/yws/public/resource/920682a7980a90ba80fff449e235f17c/xmlnote/D35FE75327B9464D9411053C4B816D3F/13325)，点击download就可以下载配置文件，下载配置文件然后，复制配置文件中的内容粘贴到上图的粘贴内容处。
+这个时候可以到Grafana官网去下载配置文件，地址为[https://grafana.com/dashboards/10477/revisions](https://grafana.com/dashboards/10477/revisions)去下载dashboard配置文件，如图所示![grafana](pictures/grafana.png)，点击download就可以下载配置文件，下载配置文件然后，复制配置文件中的内容粘贴到上图的粘贴内容处。
 
 最后按如下的方式配置就将RocketMQ的 dashboard给导入了。
 
